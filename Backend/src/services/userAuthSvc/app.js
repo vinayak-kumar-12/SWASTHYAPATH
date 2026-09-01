@@ -1,31 +1,80 @@
 const express = require("express");
 const helmet = require("helmet");
+const cors = require("cors");
 const compression = require("compression");
-const { connectDB } = require("./src/config/database.js");
+const pinoHttp = require("pino-http");
+const logger = require("./src/utils/logger");
+const errorHandler = require("./src/middleware/error.middleware");
+const authRoutes = require("./src/routes/auth.routes");
 
 const app = express();
 
-// Security
+// Security headers
 app.disable("x-powered-by");
 app.use(helmet());
-connectDB();
-// Body parser
+
+// CORS configuration
+const corsOrigin = process.env.CORS_ORIGIN || "*";
+app.use(
+  cors({
+    origin: corsOrigin === "*" ? "*" : corsOrigin.split(","),
+    credentials: true,
+  })
+);
+
+// HTTP request logging
+app.use(
+  pinoHttp({
+    logger,
+    autoLogging: {
+      ignore: (req) => req.url === "/health" || req.url === "/ready",
+    },
+  })
+);
+
+// Body parsers
 app.use(express.json({ limit: "1mb" }));
 app.use(express.urlencoded({ extended: true, limit: "1mb" }));
 
+// Response compression
 app.use(compression());
 
-// Health check
+// Health check endpoint
 app.get("/health", (req, res) => {
   res.status(200).json({
     success: true,
-    service: "swastyapath-backend-userAuth",
+    service: "swastyapath-userAuthSvc",
     status: "healthy",
     timestamp: new Date().toISOString(),
   });
 });
 
-// 404 handler
+// Readiness check endpoint (verifies database connectivity)
+app.get("/ready", async (req, res) => {
+  try {
+    const { pool } = require("./src/config/database");
+    await pool.query("SELECT 1");
+    res.status(200).json({
+      success: true,
+      service: "swastyapath-userAuthSvc",
+      status: "ready",
+      database: "connected",
+      timestamp: new Date().toISOString(),
+    });
+  } catch (error) {
+    res.status(503).json({
+      success: false,
+      service: "swastyapath-userAuthSvc",
+      status: "not_ready",
+      database: "disconnected",
+    });
+  }
+});
+
+// API routes
+app.use("/api/v1/auth", authRoutes);
+
+// 404 Route Not Found handler
 app.use((req, res) => {
   res.status(404).json({
     success: false,
@@ -36,20 +85,7 @@ app.use((req, res) => {
   });
 });
 
-// Error handler
-app.use((err, req, res, next) => {
-  console.error(err);
-
-  res.status(err.statusCode || 500).json({
-    success: false,
-    error: {
-      code: err.code || "INTERNAL_SERVER_ERROR",
-      message:
-        process.env.NODE_ENV === "production"
-          ? "Internal server error"
-          : err.message,
-    },
-  });
-});
+// Centralized error handler
+app.use(errorHandler);
 
 module.exports = app;
