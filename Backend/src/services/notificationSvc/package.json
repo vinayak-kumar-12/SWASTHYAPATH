@@ -1,0 +1,43 @@
+{
+  "name": "notificationsvc",
+  "version": "1.0.0",
+  "description": "SwasthyaPath Production Notification Microservice",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node --watch server.js",
+    "test": "node -r ./jest.setup.js node_modules/jest/bin/jest.js --detectOpenHandles --forceExit"
+  },
+  "keywords": [
+    "notification",
+    "rabbitmq",
+    "mongodb",
+    "nodemailer",
+    "swastyapath"
+  ],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "dependencies": {
+    "amqplib": "^0.10.3",
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.5",
+    "express": "^5.0.1",
+    "helmet": "^7.1.0",
+    "mongoose": "^8.6.1",
+    "nodemailer": "^6.10.1",
+    "pino": "^9.4.0",
+    "pino-http": "^10.2.0"
+  },
+  "devDependencies": {
+    "jest": "^29.7.0",
+    "pino-pretty": "^11.2.2",
+    "supertest": "^7.0.0"
+  },
+  "jest": {
+    "testEnvironment": "node",
+    "setupFiles": [
+      "<rootDir>/jest.setup.js"
+    ]
+  }
+}
