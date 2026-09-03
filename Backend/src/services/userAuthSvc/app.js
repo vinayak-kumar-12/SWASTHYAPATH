@@ -49,26 +49,39 @@ app.get("/health", (req, res) => {
   });
 });
 
-// Readiness check endpoint (verifies database connectivity)
+// Readiness check endpoint (verifies database and RabbitMQ connectivity)
 app.get("/ready", async (req, res) => {
+  const { isRabbitMQConnected } = require("./src/config/rabbitmq");
+  const isMqConnected = isRabbitMQConnected();
+  let isDbConnected = false;
+
   try {
     const { pool } = require("./src/config/database");
     await pool.query("SELECT 1");
-    res.status(200).json({
+    isDbConnected = true;
+  } catch (err) {
+    isDbConnected = false;
+  }
+
+  if (isDbConnected && isMqConnected) {
+    return res.status(200).json({
       success: true,
       service: "swastyapath-userAuthSvc",
       status: "ready",
       database: "connected",
+      rabbitmq: "connected",
       timestamp: new Date().toISOString(),
     });
-  } catch (error) {
-    res.status(503).json({
-      success: false,
-      service: "swastyapath-userAuthSvc",
-      status: "not_ready",
-      database: "disconnected",
-    });
   }
+
+  return res.status(503).json({
+    success: false,
+    service: "swastyapath-userAuthSvc",
+    status: "not_ready",
+    database: isDbConnected ? "connected" : "disconnected",
+    rabbitmq: isMqConnected ? "connected" : "disconnected",
+    timestamp: new Date().toISOString(),
+  });
 });
 
 // API routes

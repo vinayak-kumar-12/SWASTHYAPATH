@@ -21,6 +21,7 @@ router.post("/login", loginController);
 router.post("/refresh", refreshController);
 
 // Email verification & password recovery public endpoints
+router.post("/verify-email", verifyEmailController);
 router.get("/verify-email", verifyEmailController);
 router.post("/resend-verification", resendVerificationController);
 router.post("/forgot-password", forgotPasswordController);

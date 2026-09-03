@@ -113,16 +113,18 @@ const getCurrentUserController = async (req, res, next) => {
 };
 
 /**
- * GET /api/v1/auth/verify-email?token=<token>
+ * POST or GET /api/v1/auth/verify-email
  */
 const verifyEmailController = async (req, res, next) => {
   try {
-    const validation = validateInput(verifyEmailSchema, req.query);
-    if (!validation.success) {
-      throw new ValidationError("Invalid query parameters", validation.details);
+    const rawToken = req.body?.token || req.query?.token;
+    if (!rawToken) {
+      throw new ValidationError("Verification token is required", [
+        { field: "token", message: "Token field is required" },
+      ]);
     }
 
-    const result = await authService.verifyEmail(validation.data.token);
+    const result = await authService.verifyEmail(rawToken);
 
     res.status(200).json({
       success: true,

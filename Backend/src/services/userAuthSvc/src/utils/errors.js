@@ -58,11 +58,18 @@ class InternalServerError extends AppError {
   }
 }
 
+class EmailNotVerifiedError extends AppError {
+  constructor(message = "Please verify your email before logging in") {
+    super(message, 403, "EMAIL_NOT_VERIFIED");
+  }
+}
+
 module.exports = {
   AppError,
   ValidationError,
   UnauthorizedError,
   InvalidCredentialsError,
+  EmailNotVerifiedError,
   ForbiddenError,
   NotFoundError,
   ConflictError,

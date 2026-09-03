@@ -5,6 +5,8 @@ const app = require("./app");
 const { connectDB, closeDB } = require("./src/config/database");
 const logger = require("./src/utils/logger");
 
+const { connectRabbitMQ, closeRabbitMQ } = require("./src/config/rabbitmq");
+
 const PORT = Number(process.env.PORT) || 5000;
 const HOST = process.env.HOST || "0.0.0.0";
 
@@ -25,11 +27,12 @@ const gracefulShutdown = async (signal) => {
     }
 
     try {
+      await closeRabbitMQ();
       await closeDB();
       logger.info("Graceful shutdown completed. Exiting process.");
       process.exit(0);
     } catch (dbErr) {
-      logger.error({ err: dbErr }, "Error closing database connection during shutdown");
+      logger.error({ err: dbErr }, "Error closing connections during shutdown");
       process.exit(1);
     }
   });
@@ -45,6 +48,14 @@ const startServer = async () => {
   try {
     // Connect to PostgreSQL database pool
     await connectDB();
+
+    // Connect to RabbitMQ publisher
+    try {
+      await connectRabbitMQ();
+      logger.info("RabbitMQ event publisher initialized for UserAuth service");
+    } catch (mqErr) {
+      logger.error({ err: mqErr.message }, "RabbitMQ connection warning on startup. Service running HTTP APIs.");
+    }
 
     server.listen(PORT, HOST, () => {
       logger.info(`SWASTHYAPATH UserAuth microservice running on http://${HOST}:${PORT}`);

@@ -11,13 +11,14 @@ const {
 const {
   UserAlreadyExistsError,
   InvalidCredentialsError,
+  EmailNotVerifiedError,
   NotFoundError,
   UnauthorizedError,
 } = require("../utils/errors");
 const logger = require("../utils/logger");
 
 const SALT_ROUNDS = 12;
-const VERIFICATION_TOKEN_EXPIRES_HOURS = 24;
+const VERIFICATION_TOKEN_EXPIRES_MINUTES = parseInt(process.env.EMAIL_VERIFICATION_EXPIRES_MINUTES || "15", 10);
 const RESET_TOKEN_EXPIRES_HOURS = 1;
 
 const sanitizeUser = (user) => {
@@ -45,10 +46,10 @@ const registerUser = async ({ name, email, phone, password, role }) => {
 
   const passwordHash = await bcrypt.hash(password, SALT_ROUNDS);
 
-  // Generate email verification token
+  // Generate secure 15-minute email verification token
   const rawVerificationToken = generateSecureToken();
   const tokenHash = hashToken(rawVerificationToken);
-  const expiresAt = new Date(Date.now() + VERIFICATION_TOKEN_EXPIRES_HOURS * 60 * 60 * 1000);
+  const expiresAt = new Date(Date.now() + VERIFICATION_TOKEN_EXPIRES_MINUTES * 60 * 1000);
 
   const client = await pool.connect();
   let newUser;
@@ -86,19 +87,13 @@ const registerUser = async ({ name, email, phone, password, role }) => {
 
   const safeUser = sanitizeUser(newUser);
 
-  // Emit notification events for decoupled Notification Service
-  emitNotificationEvent(NOTIFICATION_EVENTS.USER_EMAIL_VERIFICATION_REQUESTED, {
+  // Publish EMAIL_VERIFICATION_REQUESTED to RabbitMQ event bus
+  await emitNotificationEvent(NOTIFICATION_EVENTS.EMAIL_VERIFICATION_REQUESTED, {
     userId: safeUser.userId,
     email: safeUser.email,
     name: safeUser.name,
-    token: rawVerificationToken,
+    verificationToken: rawVerificationToken,
     expiresAt,
-  });
-
-  emitNotificationEvent(NOTIFICATION_EVENTS.USER_WELCOME, {
-    userId: safeUser.userId,
-    email: safeUser.email,
-    name: safeUser.name,
   });
 
   const accessToken = generateAccessToken(safeUser);
@@ -129,6 +124,12 @@ const loginUser = async ({ email, password }) => {
   if (!isMatch) {
     logger.warn({ userId: user.userId }, "Login failed: Password mismatch");
     throw new InvalidCredentialsError("Invalid email or password");
+  }
+
+  // Block unverified users from logging in
+  if (!user.isVerified) {
+    logger.warn({ userId: user.userId }, "Login failed: Email not verified");
+    throw new EmailNotVerifiedError("Please verify your email before logging in");
   }
 
   const safeUser = sanitizeUser(user);
@@ -217,9 +218,11 @@ const verifyEmail = async (rawToken) => {
     client.release();
   }
 
-  emitNotificationEvent(NOTIFICATION_EVENTS.USER_EMAIL_VERIFIED, {
+  // Publish EMAIL_VERIFIED event to RabbitMQ
+  await emitNotificationEvent(NOTIFICATION_EVENTS.EMAIL_VERIFIED, {
     userId: updatedUser.userId,
     email: updatedUser.email,
+    name: updatedUser.name,
   });
 
   logger.info({ userId: updatedUser.userId }, "User email verified successfully");
@@ -245,7 +248,7 @@ const resendVerificationEmail = async (email) => {
 
   const rawVerificationToken = generateSecureToken();
   const tokenHash = hashToken(rawVerificationToken);
-  const expiresAt = new Date(Date.now() + VERIFICATION_TOKEN_EXPIRES_HOURS * 60 * 60 * 1000);
+  const expiresAt = new Date(Date.now() + VERIFICATION_TOKEN_EXPIRES_MINUTES * 60 * 1000);
 
   const client = await pool.connect();
   try {
@@ -270,11 +273,11 @@ const resendVerificationEmail = async (email) => {
     client.release();
   }
 
-  emitNotificationEvent(NOTIFICATION_EVENTS.USER_EMAIL_VERIFICATION_REQUESTED, {
+  await emitNotificationEvent(NOTIFICATION_EVENTS.EMAIL_VERIFICATION_REQUESTED, {
     userId: user.userId,
     email: user.email,
     name: user.name,
-    token: rawVerificationToken,
+    verificationToken: rawVerificationToken,
     expiresAt,
   });
 
