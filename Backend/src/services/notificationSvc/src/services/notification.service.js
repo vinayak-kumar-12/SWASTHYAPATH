@@ -24,6 +24,7 @@ const normalizeEventType = (event, eventData = {}) => {
         return NOTIFICATION_TYPES.EMAIL_VERIFICATION;
       }
       return NOTIFICATION_TYPES.WELCOME_EMAIL;
+    case "EMAIL_VERIFIED":
     case "USER_EMAIL_VERIFIED":
     case "USER_WELCOME":
     case "WELCOME_EMAIL":

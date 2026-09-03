@@ -117,4 +117,30 @@ describe("RabbitMQ Service Integration Tests", () => {
       expect(result.status).toBe("SENT");
     });
   });
+
+  describe("EMAIL_VERIFIED Event Handling", () => {
+    it("should map EMAIL_VERIFIED event to WELCOME_EMAIL and trigger sendWelcomeEmail", async () => {
+      const mockSave = jest.fn().mockResolvedValue(true);
+      Notification.mockImplementation(function (data) {
+        Object.assign(this, data);
+        this.save = mockSave;
+      });
+      Notification.findOne.mockResolvedValueOnce(null);
+
+      const emailService = require("../services/email.service");
+      const result = await processNotificationEvent({
+        event: "EMAIL_VERIFIED",
+        eventId: "evt_verified_123",
+        userId: "usr_verified",
+        email: "verified@example.com",
+        name: "Verified User",
+      });
+
+      expect(emailService.sendWelcomeEmail).toHaveBeenCalledWith({
+        to: "verified@example.com",
+        name: "Verified User",
+      });
+      expect(result.type).toBe("WELCOME_EMAIL");
+    });
+  });
 });
