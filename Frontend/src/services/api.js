@@ -41,12 +41,21 @@ api.interceptors.response.use(
     // Normalize error object
     const errorResponse = error.response?.data || {};
     const statusCode = error.response?.status || 500;
-    const errorCode = errorResponse.error?.code || errorResponse.code || 'UNKNOWN_ERROR';
-    const message =
+    let errorCode = errorResponse.error?.code || errorResponse.code || 'UNKNOWN_ERROR';
+    let message =
       errorResponse.error?.message ||
       errorResponse.message ||
       error.message ||
       'An unexpected error occurred';
+
+    // Normalize DB unique constraint duplicate key error (patients_user_id_key)
+    if (
+      typeof message === 'string' &&
+      (message.includes('patients_user_id_key') || message.includes('duplicate key value violates unique constraint'))
+    ) {
+      errorCode = 'PATIENT_ALREADY_EXISTS';
+      message = 'A patient profile already exists for this account.';
+    }
 
     // Handle token refresh on 401 UNAUTHORIZED
     if (

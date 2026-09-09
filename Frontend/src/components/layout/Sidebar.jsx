@@ -13,6 +13,7 @@ import {
 
 const navigationItems = [
   { name: 'Dashboard', path: '/dashboard', icon: LayoutDashboard },
+  { name: 'My Profile', path: '/patient-profile', icon: UserCheck },
   { name: 'Patients', path: '/patients', icon: Users, badge: 'Coming Soon' },
   { name: 'Doctors', path: '/doctors', icon: Stethoscope, badge: 'Coming Soon' },
   { name: 'Appointments', path: '/appointments', icon: Calendar, badge: 'Coming Soon' },

@@ -2,6 +2,7 @@ import React from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
 import { ProtectedRoute } from './ProtectedRoute';
 import { PublicRoute } from './PublicRoute';
+import { PatientProfileRoute } from './PatientProfileRoute';
 
 import { Login } from '../pages/auth/Login';
 import { Register } from '../pages/auth/Register';
@@ -11,6 +12,8 @@ import { ForgotPassword } from '../pages/auth/ForgotPassword';
 import { ResetPassword } from '../pages/auth/ResetPassword';
 
 import { Dashboard } from '../pages/dashboard/Dashboard';
+import { PatientProfileSetup } from '../pages/patient/PatientProfileSetup';
+import { PatientProfileView } from '../pages/patient/PatientProfileView';
 import { NotFound } from '../pages/errors/NotFound';
 
 export const AppRoutes = () => {
@@ -29,9 +32,15 @@ export const AppRoutes = () => {
         <Route path="/reset-password" element={<ResetPassword />} />
       </Route>
 
-      {/* Protected Authenticated Routes */}
+      {/* Mandatory Onboarding Profile Route (Only accessible if logged in but NO patient profile) */}
+      <Route element={<PatientProfileRoute />}>
+        <Route path="/patient-setup" element={<PatientProfileSetup />} />
+      </Route>
+
+      {/* Protected Authenticated Routes (Only accessible after profile setup is complete) */}
       <Route element={<ProtectedRoute />}>
         <Route path="/dashboard" element={<Dashboard />} />
+        <Route path="/patient-profile" element={<PatientProfileView />} />
         {/* Placeholder module routes redirecting to Dashboard */}
         <Route path="/patients" element={<Dashboard />} />
         <Route path="/doctors" element={<Dashboard />} />
@@ -46,3 +55,4 @@ export const AppRoutes = () => {
     </Routes>
   );
 };
+

@@ -1,9 +1,10 @@
 import React from 'react';
+import { Link } from 'react-router-dom';
 import { useAuth } from '../../hooks/useAuth';
 import { HeartPulse, LogOut, User, Bell, ShieldCheck } from 'lucide-react';
 
 export const Navbar = () => {
-  const { user, logout } = useAuth();
+  const { user, patientProfile, logout } = useAuth();
 
   return (
     <header className="bg-white border-b border-slate-200 sticky top-0 z-30 shadow-xs">
@@ -34,25 +35,49 @@ export const Navbar = () => {
           {/* User Badge */}
           {user && (
             <div className="flex items-center gap-3 pl-3 border-l border-slate-200">
-              <div className="w-8 h-8 rounded-full bg-teal-100 text-teal-700 font-semibold flex items-center justify-center text-xs">
-                {user.name ? user.name.charAt(0).toUpperCase() : 'U'}
-              </div>
-              <div className="hidden md:block text-left">
-                <div className="text-xs font-semibold text-slate-800 flex items-center gap-1">
-                  <span>{user.name || user.email}</span>
-                  {user.isVerified && (
-                    <ShieldCheck className="w-3.5 h-3.5 text-teal-600" title="Verified Account" />
+              <Link
+                to="/patient-profile"
+                className="flex items-center gap-2.5 p-1 rounded-xl hover:bg-slate-50 transition-colors group cursor-pointer"
+                title="View & Edit Patient Profile"
+              >
+                <div className="w-8 h-8 rounded-full bg-teal-100 text-teal-700 font-semibold flex items-center justify-center text-xs overflow-hidden border border-teal-200 shrink-0">
+                  {patientProfile?.profileImageUrl || patientProfile?.profile_image_url ? (
+                    <img
+                      src={patientProfile.profileImageUrl || patientProfile.profile_image_url}
+                      alt="Profile"
+                      className="w-full h-full object-cover"
+                    />
+                  ) : (
+                    <span>
+                      {patientProfile?.firstName
+                        ? patientProfile.firstName.charAt(0).toUpperCase()
+                        : user.name
+                        ? user.name.charAt(0).toUpperCase()
+                        : 'U'}
+                    </span>
                   )}
                 </div>
-                <div className="text-[10px] text-slate-500 font-medium">
-                  {user.role || 'PATIENT'}
+                <div className="hidden md:block text-left">
+                  <div className="text-xs font-semibold text-slate-800 flex items-center gap-1 group-hover:text-teal-700 transition-colors">
+                    <span>
+                      {patientProfile?.firstName
+                        ? `${patientProfile.firstName} ${patientProfile.lastName || ''}`
+                        : user.name || user.email}
+                    </span>
+                    {user.isVerified && (
+                      <ShieldCheck className="w-3.5 h-3.5 text-teal-600" title="Verified Account" />
+                    )}
+                  </div>
+                  <div className="text-[10px] text-slate-500 font-medium">
+                    {user.role || 'PATIENT'} • View Profile
+                  </div>
                 </div>
-              </div>
+              </Link>
 
               {/* Logout Button */}
               <button
                 onClick={logout}
-                className="ml-2 p-2 text-slate-400 hover:text-rose-600 rounded-lg hover:bg-rose-50 transition-colors"
+                className="ml-1 p-2 text-slate-400 hover:text-rose-600 rounded-lg hover:bg-rose-50 transition-colors cursor-pointer"
                 title="Sign out"
               >
                 <LogOut className="w-4 h-4" />
