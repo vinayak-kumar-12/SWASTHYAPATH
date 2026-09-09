@@ -32,7 +32,10 @@ const getMyProfile = async (req, res, next) => {
 const updateMyProfile = async (req, res, next) => {
   try {
     const userId = req.user.userId;
-    const updatedPatient = await patientService.updatePatientByUserId(userId, req.body);
+    const updatedPatient = await patientService.updatePatientByUserId(
+      userId,
+      req.body,
+    );
 
     res.status(200).json({
       success: true,
@@ -50,7 +53,11 @@ const getPatientById = async (req, res, next) => {
     const authenticatedUserId = req.user.userId;
     const role = req.user.role;
 
-    const patient = await patientService.getPatientById(authenticatedUserId, patientId, role);
+    const patient = await patientService.getPatientById(
+      authenticatedUserId,
+      patientId,
+      role,
+    );
 
     res.status(200).json({
       success: true,
@@ -71,7 +78,7 @@ const updatePatientById = async (req, res, next) => {
       authenticatedUserId,
       patientId,
       req.body,
-      role
+      role,
     );
 
     res.status(200).json({
@@ -90,7 +97,11 @@ const deletePatientById = async (req, res, next) => {
     const authenticatedUserId = req.user.userId;
     const role = req.user.role;
 
-    await patientService.softDeletePatientById(authenticatedUserId, patientId, role);
+    await patientService.softDeletePatientById(
+      authenticatedUserId,
+      patientId,
+      role,
+    );
 
     res.status(200).json({
       success: true,
