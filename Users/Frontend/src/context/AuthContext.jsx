@@ -28,7 +28,7 @@ export const AuthProvider = ({ children }) => {
         return { hasProfile: false, profile: null };
       }
     } catch (err) {
-      if (err?.statusCode === 404 || err?.code === 'PATIENT_NOT_FOUND') {
+      if (err?.code === 'PATIENT_NOT_FOUND' || (err?.statusCode === 404 && err?.code === 'PATIENT_NOT_FOUND')) {
         setPatientProfile(null);
         setHasPatientProfile(false);
         return { hasProfile: false, profile: null };

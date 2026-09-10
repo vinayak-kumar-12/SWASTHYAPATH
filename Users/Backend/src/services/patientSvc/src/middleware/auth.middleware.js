@@ -1,7 +1,7 @@
 const jwt = require("jsonwebtoken");
 const { UnauthorizedError } = require("../utils/errors");
 
-const ACCESS_SECRET = process.env.JWT_ACCESS_SECRET || "8be9920e17dd8034952b95754f5212a8cac1f66d90a7121d3303ec06a59bc36d";
+const getAccessSecret = () => process.env.JWT_ACCESS_SECRET || "8be9920e17dd8034952b95754f5212a8cac1f66d90a7121d3303ec06a59bc36d";
 
 const authenticateToken = (req, res, next) => {
   const authHeader = req.headers.authorization;
@@ -11,7 +11,7 @@ const authenticateToken = (req, res, next) => {
 
   const token = authHeader.split(" ")[1];
   try {
-    const decoded = jwt.verify(token, ACCESS_SECRET);
+    const decoded = jwt.verify(token, getAccessSecret());
     if (decoded.type !== "access") {
       return next(new UnauthorizedError("Invalid token type", "INVALID_TOKEN_TYPE"));
     }

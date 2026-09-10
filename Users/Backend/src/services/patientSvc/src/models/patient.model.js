@@ -1,8 +1,13 @@
+const { randomUUID } = require("crypto");
 const { query } = require("../config/database");
+const { ConflictError } = require("../utils/errors");
 
 const createPatient = async (data) => {
+  const patientId = data.patient_id || randomUUID();
+
   const sql = `
     INSERT INTO patient.patients (
+      patient_id,
       user_id,
       first_name,
       last_name,
@@ -22,7 +27,7 @@ const createPatient = async (data) => {
       profile_image_url,
       status
     )
-    VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18)
+    VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19)
     RETURNING
       patient_id AS "patientId",
       user_id AS "userId",
@@ -48,6 +53,7 @@ const createPatient = async (data) => {
   `;
 
   const values = [
+    patientId,
     data.user_id,
     data.first_name,
     data.last_name || null,
@@ -68,8 +74,18 @@ const createPatient = async (data) => {
     data.status || "ACTIVE",
   ];
 
-  const res = await query(sql, values);
-  return res.rows[0];
+  try {
+    const res = await query(sql, values);
+    return res.rows[0];
+  } catch (err) {
+    if (
+      err.code === "23505" ||
+      (typeof err.message === "string" && err.message.includes("patients_user_id_key"))
+    ) {
+      throw new ConflictError("Patient profile already exists for this user", "PATIENT_ALREADY_EXISTS");
+    }
+    throw err;
+  }
 };
 
 const findPatientByUserId = async (userId) => {
