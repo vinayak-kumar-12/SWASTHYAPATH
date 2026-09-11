@@ -2,6 +2,7 @@ import React from 'react';
 import { NavLink } from 'react-router-dom';
 import {
   LayoutDashboard,
+  Activity,
   Users,
   UserCheck,
   Stethoscope,
@@ -13,11 +14,10 @@ import {
 
 const navigationItems = [
   { name: 'Dashboard', path: '/dashboard', icon: LayoutDashboard },
+  { name: 'My Health Concerns', path: '/dashboard/health-concerns', icon: Activity },
   { name: 'My Profile', path: '/patient-profile', icon: UserCheck },
-  { name: 'Patients', path: '/patients', icon: Users, badge: 'Coming Soon' },
-  { name: 'Doctors', path: '/doctors', icon: Stethoscope, badge: 'Coming Soon' },
   { name: 'Appointments', path: '/appointments', icon: Calendar, badge: 'Coming Soon' },
-  { name: 'Documents', path: '/documents', icon: FileText, badge: 'Coming Soon' },
+  { name: 'Medical Records', path: '/documents', icon: FileText, badge: 'Coming Soon' },
   { name: 'Notifications', path: '/notifications', icon: Bell, badge: 'Coming Soon' },
   { name: 'Settings', path: '/settings', icon: Settings },
 ];

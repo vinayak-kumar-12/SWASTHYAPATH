@@ -12,6 +12,9 @@ import { ForgotPassword } from '../pages/auth/ForgotPassword';
 import { ResetPassword } from '../pages/auth/ResetPassword';
 
 import { Dashboard } from '../pages/dashboard/Dashboard';
+import { HealthConcernList } from '../pages/dashboard/HealthConcernList';
+import { HealthConcernForm } from '../pages/dashboard/HealthConcernForm';
+import { HealthConcernDetails } from '../pages/dashboard/HealthConcernDetails';
 import { PatientProfileSetup } from '../pages/patient/PatientProfileSetup';
 import { PatientProfileView } from '../pages/patient/PatientProfileView';
 import { NotFound } from '../pages/errors/NotFound';
@@ -40,6 +43,9 @@ export const AppRoutes = () => {
       {/* Protected Authenticated Routes (Only accessible after profile setup is complete) */}
       <Route element={<ProtectedRoute />}>
         <Route path="/dashboard" element={<Dashboard />} />
+        <Route path="/dashboard/health-concerns" element={<HealthConcernList />} />
+        <Route path="/dashboard/health-concern/new" element={<HealthConcernForm />} />
+        <Route path="/dashboard/health-concern/:id" element={<HealthConcernDetails />} />
         <Route path="/patient-profile" element={<PatientProfileView />} />
         {/* Placeholder module routes redirecting to Dashboard */}
         <Route path="/patients" element={<Dashboard />} />
@@ -55,4 +61,3 @@ export const AppRoutes = () => {
     </Routes>
   );
 };
-
