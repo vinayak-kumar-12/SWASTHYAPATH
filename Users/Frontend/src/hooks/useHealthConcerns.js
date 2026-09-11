@@ -13,9 +13,9 @@ export const useHealthConcerns = (concernId = null) => {
     setError(null);
     try {
       const data = await healthConcernService.getHealthConcerns();
-      setConcerns(data);
+      setConcerns(data || []);
     } catch (err) {
-      setError(err.message || 'Failed to load health concerns');
+      setError(err.message || 'Unable to load your health concerns. Please try again.');
     } finally {
       setIsLoading(false);
     }
@@ -28,8 +28,11 @@ export const useHealthConcerns = (concernId = null) => {
     try {
       const data = await healthConcernService.getHealthConcernById(id);
       setActiveConcern(data);
+      if (!data) {
+        setError('Health concern not found');
+      }
     } catch (err) {
-      setError(err.message || 'Failed to load concern details');
+      setError(err.message || 'Unable to load health concern details');
     } finally {
       setIsLoading(false);
     }
@@ -52,7 +55,25 @@ export const useHealthConcerns = (concernId = null) => {
       setActiveConcern(created);
       return created;
     } catch (err) {
-      setError(err.message || 'Failed to submit health concern');
+      setError(err.message || 'Failed to submit health concern. Please try again.');
+      throw err;
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const updateConcern = async (id, updateData) => {
+    setIsSubmitting(true);
+    setError(null);
+    try {
+      const updated = await healthConcernService.updateHealthConcern(id, updateData);
+      if (updated) {
+        setActiveConcern(updated);
+        setConcerns((prev) => prev.map((item) => (item.id === id ? updated : item)));
+      }
+      return updated;
+    } catch (err) {
+      setError(err.message || 'Failed to update health concern');
       throw err;
     } finally {
       setIsSubmitting(false);
@@ -68,5 +89,6 @@ export const useHealthConcerns = (concernId = null) => {
     refreshConcerns: fetchConcerns,
     fetchConcernById,
     submitConcern,
+    updateConcern,
   };
 };
